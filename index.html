@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Weather App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Section */
+        * { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+        body {
+            background: #222;
+            background-image: linear-gradient(135deg, #00feba, #5b548a);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.8s ease;
+        }
+        .weather-card {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            color: #fff;
+            padding: 40px 35px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        .search { width: 100%; display: flex; align-items: center; margin-bottom: 30px; }
+        .search input {
+            border: 0; outline: 0; background: rgba(255, 255, 255, 0.2);
+            color: #fff; padding: 10px 20px; height: 50px; border-radius: 30px;
+            flex: 1; margin-right: 12px; font-size: 16px;
+        }
+        .search button {
+            border: 0; outline: 0; background: #fff; border-radius: 50%;
+            width: 50px; height: 50px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .search button img { width: 22px; }
+        .weather-icon { width: 140px; margin-top: 10px; }
+        .temp { font-size: 70px; font-weight: 600; }
+        .city { font-size: 35px; text-transform: capitalize; margin-bottom: 20px; }
+        .details { display: flex; align-items: center; justify-content: space-between; margin-top: 30px; }
+        .col { display: flex; align-items: center; text-align: left; }
+        .col img { width: 35px; margin-right: 10px; filter: invert(1); }
+        .humidity, .wind { font-size: 20px; font-weight: 500; }
+        p { font-size: 14px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <div class="weather-card">
+        <div class="search">
+            <input type="text" placeholder="Enter City Name" id="cityInput">
+            <button id="searchBtn">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149852.png" alt="search">
+            </button>
+        </div>
+        <div class="weather">
+            <img src="https://openweathermap.org/img/wn/01d@4x.png" class="weather-icon" id="weatherIcon">
+            <h1 class="temp" id="tempText">--°c</h1>
+            <h2 class="city" id="cityNameText">Search City</h2>
+            <div class="details">
+                <div class="col">
+                    <img src="https://cdn-icons-png.flaticon.com/512/727/727790.png">
+                    <div>
+                        <p class="humidity" id="humidityText">--%</p>
+                        <p>Humidity</p>
+                    </div>
+                </div>
+                <div class="col">
+                    <img src="https://cdn-icons-png.flaticon.com/512/483/483584.png">
+                    <div>
+                        <p class="wind" id="windText">-- km/h</p>
+                        <p>Wind Speed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Section
+        const apiKey = "ae7c55fe0a0141b2a3ec26f36c819e9b"; 
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?units=metric&q=`;
+
+        const searchBox = document.getElementById("cityInput");
+        const searchBtn = document.getElementById("searchBtn");
+        const weatherIcon = document.getElementById("weatherIcon");
+
+        async function checkWeather(city) {
+            if (!city) return;
+
+            // URL ko concatenation (+) ke saath likha hai taka quotes ki galti na ho
+            const finalUrl = apiUrl + city + "&appid=" + apiKey;
+
+            try {
+                const response = await fetch(finalUrl);
+                const data = await response.json();
+
+                if (response.status == 404) {
+                    alert("City name is incorrect!");
+                } else {
+                    // Update UI
+                    document.getElementById("cityNameText").innerHTML = data.name;
+                    document.getElementById("tempText").innerHTML = Math.round(data.main.temp) + "°c";
+                    document.getElementById("humidityText").innerHTML = data.main.humidity + "%";
+                    document.getElementById("windText").innerHTML = data.wind.speed + " km/h";
+                    
+                    // Update Icon
+                    const iconCode = data.weather[0].icon;
+                    weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+                    // Background Update Logic
+                    const condition = data.weather[0].main;
+                    if (condition == "Clouds") {
+                        document.body.style.backgroundImage = "linear-gradient(135deg, #bdc3c7, #2c3e50)";
+                    } else if (condition == "Clear") {
+                        document.body.style.backgroundImage = "linear-gradient(135deg, #f7b733, #fc4a1a)";
+                    } else if (condition == "Rain") {
+                        document.body.style.backgroundImage = "linear-gradient(135deg, #005c97, #363795)";
+                    } else if (condition == "Drizzle") {
+                        document.body.style.backgroundImage = "linear-gradient(135deg, #89f7fe, #66a6ff)";
+                    } else if (condition == "Mist"){
+                        document.body.style.backgroundImage = "linear-gradient(135deg, #3e5151, #decba4)";
+                    }
+                }
+            } catch (error) {
+                console.log("Error fetching data:", error);
+            }
+        }
+
+        // Search Button Click
+        searchBtn.addEventListener("click", () => {
+            checkWeather(searchBox.value);
+        });
+
+        // Enter Key Press
+        searchBox.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                checkWeather(searchBox.value);
+            }
+        });
+    </script>
+</body>
+</html>
